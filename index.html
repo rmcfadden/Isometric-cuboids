@@ -24,79 +24,82 @@
     </body>
     <script>
 
-        // Testing rename
         const draw = () => {
             const {width, height} = document.querySelector("canvas");
-            const count = 20;
-            const isoWidth = width  / count;
+            const wCount = 20;
+            const isoWidth = width  / wCount;
             const isoHeight = (isoWidth * 2) / Math.sqrt(3);
+            const hCount = height / (isoHeight -  (isoHeight * 1/4));
 
             const top = (height / 2);
             const left = -1 * (width / 2);
             const adjustedLeft = left;
 
-            for(let i = 0; i < count; i++){
-                for(let j = 0; j < count + 1; j++){
+            for(let i = 0; i < hCount + 1; i++){
+                for(let j = 0; j < wCount + 1; j++){
+                    const randHeight = Math.random() * 200;
                     drawIsometricCube({
                         x:adjustedLeft + (j * isoWidth ) - ( i % 2 == 1 ? isoWidth * 1/2 : 0),
                         y:top - (i * isoHeight - (isoHeight * (1/4 * (i +1 )))), 
-                        h:isoHeight, 
-                        w:isoWidth});                
+                        w:isoWidth,                        
+                        h:isoHeight,
+                        hV:randHeight
+                    });                
                 }
             }
         };
 
 
-        const drawIsometricCube = ({x, y, w, h}) =>{
+        const drawIsometricCube = ({x, y, w, h, hV}) =>{
             const canvas = document.querySelector("canvas");
             const ctx = canvas.getContext("2d");
 
-            ctx.beginPath();
-            ctx.moveTo(x + (w  / 2), y);
-            ctx.lineTo(x + w, y - (h  / 4));
-            ctx.lineTo(x + (w  / 2), y - (h / 2));
-            ctx.lineTo(x, y - (h  / 4));
-            ctx.lineTo(x + (w  / 2), y);
-            ctx.stroke();
-            ctx.fillStyle = "red";
-            ctx.fill();
+            const halfWidth = w / 2;
+            const adjustedTop = y + hV;
+            const adjustedCornerTop = adjustedTop - (h * 1/4)
+            const adjustedBottomTop = adjustedCornerTop- (h * 1/4)
 
-            ctx.beginPath();
-            ctx.moveTo(x, y - (h  / 4));
-            ctx.lineTo(x, (y - (h  / 4)) - h/2);
-            ctx.lineTo(x + (w  / 2), y - h);
-            ctx.lineTo(x + (w  / 2), y - (h / 2));
-            ctx.lineTo(x, y - (h  / 4));
+
+            // right side
+            ctx.beginPath(); 
+            ctx.moveTo(x + halfWidth, y - h); 
+            ctx.lineTo(x, y - (h *  3/4)); // 1
+            ctx.lineTo(x, adjustedCornerTop); // 2 variable
+            ctx.lineTo(x + halfWidth, (y - (h / 2)) + hV);  // 3
+            ctx.lineTo(x + halfWidth, y - h); // 4 variable
             ctx.strokeStyle = "blue"
             ctx.stroke();
             ctx.fillStyle = "orange";
             ctx.fill();
 
+            // left side
+            ctx.beginPath(); 
+            ctx.moveTo(x + halfWidth, y - h); 
+            ctx.lineTo(x + w, y - (h *  3/4)); // 1
+            ctx.lineTo(x + w, adjustedCornerTop); // 2 variable
+            ctx.lineTo(x + halfWidth, (y - (h / 2)) + hV);  // 3
+            ctx.lineTo(x + halfWidth, y - h); // 4 variable
+            ctx.strokeStyle = "blue"
+            ctx.stroke();
+            ctx.fillStyle = "yellow";
+            ctx.fill();
+
 
             ctx.beginPath();
-            ctx.moveTo(x + w, y - (h  / 4));
-            ctx.lineTo(x + (w  / 2), y - (h / 2));
-            ctx.lineTo(x + (w  / 2), y - h);
-            ctx.lineTo(x + w, y - (h  * 3/ 4));
-            ctx.lineTo(x + w, y - (h  / 4));
+            ctx.moveTo(x + halfWidth, adjustedTop);
+            ctx.lineTo(x + w, adjustedCornerTop);
+            ctx.lineTo(x + halfWidth, adjustedBottomTop);
+            ctx.lineTo(x, adjustedCornerTop);
+            ctx.lineTo(x + halfWidth, adjustedTop);
+            ctx.stroke();
+            ctx.fillStyle = "red";
+            ctx.fill();
 
 
             ctx.strokeStyle = "green"
             ctx.stroke();
             ctx.fillStyle = "blue";
             ctx.fill();
-
-/*
-            ctx.moveTo(x + (w  / 2), y  - (h/ 2));
-            ctx.lineTo(x + (w  / 2), y - h);
-
-            ctx.moveTo(x + w, y - (h  / 4));
-            ctx.lineTo(x + w,  (y - (h  / 4)) - h/2);
-            ctx.moveTo(x + w,  (y - (h  / 4)) - h/2);
-            ctx.lineTo(x + (w  / 2), y - h);
-            ctx.moveTo(x, y - (h - (h  / 4)));
-            ctx.lineTo(x + (w  / 2), y - h);
-*/
         }
 
         const resize = () => {
