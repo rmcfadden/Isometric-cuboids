@@ -1,5 +1,6 @@
 <html>
     <head>
+        <script src="https://unpkg.com/vanilla-picker@2"></script>
         <style>
             body {
                 margin: 0;
@@ -17,16 +18,151 @@
                 width: 100%;
                 height: 100%;
             }
+
+            #options {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                width: 200px;
+                height: 300px;
+                background-color: lightgrey;
+                opacity: .97;
+                border: 1px solid black;
+                border-radius: .25em;
+                padding: .5em;
+            }
+
+            #options-header {
+                font-weight: bold;
+                margin-bottom: .5em;
+            }
+
+            #top-picker, #left-picker, #right-picker {
+                height: 20px;
+                width:  100px;
+                border: 1px solid darkgray
+            }
+
+            #top-color-panel {
+                padding-top: .5em;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            #top-colors {
+                margin-top: 1em;
+            }
+
+            #top-colors-header {
+                font-weight: bold;
+            }
+
+            #left-color-panel, #right-color-panel {
+                padding-top: .25em;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+
+
         </style>
     <body>
-        
         <canvas></canvas>
+        <div id="options">
+            <div id="options-header">
+                Options
+            </div>
+            <div>
+                <label for="width">Block count:</label>
+                <select id="count_select" onchange="changeCountSelect()">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20" selected>20</option>
+                    <option value="25">25</option>
+                    <option value="30">30</option>
+                    <option value="35">35</option>
+                    <option value="40">40</option>
+                    <option value="45">45</option>
+                    <option value="50">50</option>
+                    <option value="60">60</option>
+                    <option value="70">70</option>
+                    <option value="80">80</option>
+                    <option value="90">90</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <div id="top-colors">
+                <div id="top-colors-header">Colors:</div>
+                <div id="top-color-panel">
+                    <div>Top:</div>
+                    <div id="top-picker"></div>
+                </div>
+                <div id="left-color-panel">
+                    <div>Left:</div>
+                    <div id="left-picker"></div>
+                </div>
+                <div id="right-color-panel">
+                    <div>Right:</div>
+                    <div id="right-picker"></div>
+                </div>
+
+            </div>            
+        </div>
     </body>
     <script>
+        const init = () => {
+            const defaultTopColor ='blue';
+            const topPickerParent = document.querySelector('#top-picker');
+            const topPicker = new Picker(topPickerParent);
+            topPicker.setOptions({
+                popup: 'left',
+                color:defaultTopColor
+            })
+            topPickerParent.style.background = defaultTopColor;
+            topPicker.onChange = function(color) {
+                topPickerParent.style.background = color.rgbaString;
+                draw();
+            };
+
+            const defaultLeftColor ='yellow';
+            const leftPickerParent = document.querySelector('#left-picker');
+            const leftPicker = new Picker(leftPickerParent);
+            leftPicker.setOptions({
+                popup: 'left',
+                color:defaultLeftColor
+            })
+            leftPickerParent.style.background = defaultLeftColor;
+            leftPicker.onChange = function(color) {
+                leftPickerParent.style.background = color.rgbaString;
+                draw();
+            };
+
+            const defaultrightColor ='orange';
+            const rightPickerParent = document.querySelector('#right-picker');
+            const rightPicker = new Picker(rightPickerParent);
+            rightPicker.setOptions({
+                popup: 'left',
+                color:defaultrightColor
+            })
+            rightPickerParent.style.background = defaultrightColor;
+            rightPicker.onChange = function(color) {
+                rightPickerParent.style.background = color.rgbaString;
+                draw();
+            };
+        }
+
+        const changeCountSelect = () => {
+            const select = document.querySelector("#count_select");
+            const value = select.value;
+            draw();
+        }
 
         const draw = () => {
             const {width, height} = document.querySelector("canvas");
-            const wCount = 20;
+            const wCount = document.getElementById("count_select").value;
             const isoWidth = width  / wCount;
             const isoHeight = (isoWidth * 2) / Math.sqrt(3);
             const hCount = height / (isoHeight -  (isoHeight * 1/4));
@@ -35,56 +171,62 @@
             const left = -1 * (width / 2);
             const adjustedLeft = left;
 
+            const {style: {background: topPickerColor}} = document.querySelector('#top-picker');
+            const {style: {background: leftPickerColor}} = document.querySelector('#left-picker');
+            const {style: {background: righPickerColor}} = document.querySelector('#right-picker');
+
+
             for(let i = 0; i < hCount + 1; i++){
                 for(let j = 0; j < wCount + 1; j++){
-                    const randHeight = Math.random() * 200;
+                    const randHeight = Math.random() * 75;
                     drawIsometricCube({
                         x:adjustedLeft + (j * isoWidth ) - ( i % 2 == 1 ? isoWidth * 1/2 : 0),
                         y:top - (i * isoHeight - (isoHeight * (1/4 * (i +1 )))), 
                         w:isoWidth,                        
                         h:isoHeight,
-                        hV:randHeight
+                        hV:randHeight,
+                        topColor: topPickerColor,
+                        leftColor: leftPickerColor,
+                        rightColor: righPickerColor
                     });                
                 }
             }
         };
 
 
-        const drawIsometricCube = ({x, y, w, h, hV}) =>{
+        const drawIsometricCube = ({x, y, w, h, hV, topColor, leftColor, rightColor}) =>{
             const canvas = document.querySelector("canvas");
             const ctx = canvas.getContext("2d");
-
             const halfWidth = w / 2;
             const adjustedTop = y + hV;
             const adjustedCornerTop = adjustedTop - (h * 1/4)
             const adjustedBottomTop = adjustedCornerTop- (h * 1/4)
 
-
-            // right side
+            // right
             ctx.beginPath(); 
             ctx.moveTo(x + halfWidth, y - h); 
             ctx.lineTo(x, y - (h *  3/4)); // 1
             ctx.lineTo(x, adjustedCornerTop); // 2 variable
             ctx.lineTo(x + halfWidth, (y - (h / 2)) + hV);  // 3
             ctx.lineTo(x + halfWidth, y - h); // 4 variable
-            ctx.strokeStyle = "blue"
+            ctx.strokeStyle = "black"
             ctx.stroke();
-            ctx.fillStyle = "orange";
+            ctx.fillStyle = rightColor;
             ctx.fill();
 
-            // left side
+            // left
             ctx.beginPath(); 
             ctx.moveTo(x + halfWidth, y - h); 
             ctx.lineTo(x + w, y - (h *  3/4)); // 1
             ctx.lineTo(x + w, adjustedCornerTop); // 2 variable
             ctx.lineTo(x + halfWidth, (y - (h / 2)) + hV);  // 3
             ctx.lineTo(x + halfWidth, y - h); // 4 variable
-            ctx.strokeStyle = "blue"
+            ctx.strokeStyle = "black"
             ctx.stroke();
-            ctx.fillStyle = "yellow";
+            ctx.fillStyle = leftColor;
             ctx.fill();
 
-
+            // top
             ctx.beginPath();
             ctx.moveTo(x + halfWidth, adjustedTop);
             ctx.lineTo(x + w, adjustedCornerTop);
@@ -92,13 +234,12 @@
             ctx.lineTo(x, adjustedCornerTop);
             ctx.lineTo(x + halfWidth, adjustedTop);
             ctx.stroke();
-            ctx.fillStyle = "red";
+            ctx.fillStyle = leftColor;
             ctx.fill();
 
-
-            ctx.strokeStyle = "green"
+            ctx.strokeStyle = "black"
             ctx.stroke();
-            ctx.fillStyle = "blue";
+            ctx.fillStyle = topColor
             ctx.fill();
         }
 
@@ -112,6 +253,7 @@
         }
 
         window.addEventListener('resize', resize);
+        init();
         resize();
         draw();
 
