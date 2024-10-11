@@ -5,8 +5,8 @@
             body {
                 margin: 0;
                 padding: 0;
+                font-family: Arial, Helvetica, sans-serif;
             }
-
             canvas {
                 background-color: #fcfcfc;
                 display: block;
@@ -18,7 +18,6 @@
                 width: 100%;
                 height: 100%;
             }
-
             #options {
                 position: absolute;
                 top: 10px;
@@ -26,63 +25,89 @@
                 width: 200px;
                 height: 300px;
                 background-color: lightgrey;
-                opacity: .97;
+                opacity: .95;
                 border: 1px solid black;
                 border-radius: .25em;
-                padding: .5em;
+                padding: .75em;
             }
+            #title {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                font-weight: bold;
+                color: black;
+                font-size:3rem;
+                background-color: lightgrey;
+                opacity: .80;
+                border: 1px solid black;
+                border-radius: .1em;
+                padding: .2em;
 
+            }
             #options-header {
                 font-weight: bold;
+                font-size: large;
                 margin-bottom: .5em;
             }
-
             #top-picker, #left-picker, #right-picker {
                 height: 20px;
                 width:  100px;
                 border: 1px solid darkgray
             }
-
-            #top-color-panel {
+            #top-color-content {
                 padding-top: .5em;
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;
             }
-
-            #top-colors {
+            #top-colors-panel {
                 margin-top: 1em;
             }
-
             #top-colors-header {
                 font-weight: bold;
             }
-
-            #left-color-panel, #right-color-panel {
+            #algorithm-label {
+                padding-top: .5em;
+                font-weight: bold;
+            }
+            #algorithm-content {
+                height: 20px;
+                width:  100px;
+                padding-top: .5em;
+            }
+            #left-colors-content, #right-colors-content, #algorithm-content, #use-random-content {
                 padding-top: .25em;
-                display: flex;
+                display: flex;  
                 flex-direction: row;
                 justify-content: space-between;
             }
-
-
+            #algorithm-panel, #shuffle-panel {
+                padding-top: .5em;
+                font-weight: bold;                
+            }
+            #random-color-checkbox {
+                height: 20px;
+                width: 20px;
+            }
 
         </style>
+
     <body>
         <canvas></canvas>
+        <div id="title">Isometric Cube Playground</div>
         <div id="options">
             <div id="options-header">
                 Options
             </div>
             <div>
                 <label for="width">Block count:</label>
-                <select id="count_select" onchange="changeCountSelect()">
+                <select id="count_select" onchange="changeCount()">
                     <option value="5">5</option>
                     <option value="10">10</option>
                     <option value="15">15</option>
-                    <option value="20" selected>20</option>
+                    <option value="20">20</option>
                     <option value="25">25</option>
-                    <option value="30">30</option>
+                    <option value="30" selected>30</option>
                     <option value="35">35</option>
                     <option value="40">40</option>
                     <option value="45">45</option>
@@ -94,73 +119,102 @@
                     <option value="100">100</option>
                 </select>
             </div>
-            <div id="top-colors">
-                <div id="top-colors-header">Colors:</div>
-                <div id="top-color-panel">
+            <div id="top-colors-panel">
+                <div id="top-colors-header">Colors</div>
+                <div id="top-color-content">
                     <div>Top:</div>
                     <div id="top-picker"></div>
                 </div>
-                <div id="left-color-panel">
+                <div id="left-colors-content">
                     <div>Left:</div>
                     <div id="left-picker"></div>
                 </div>
-                <div id="right-color-panel">
+                <div id="right-colors-content">
                     <div>Right:</div>
                     <div id="right-picker"></div>
                 </div>
+                <div id="use-random-content">
+                    <div>Use random:</div>
+                    <input type="checkbox" id="random-color-checkbox" onchange="randomColorChange()"></input>  
+                </div>
+            </div>
 
-            </div>            
+            <div id="algorithm-panel">
+                <label id="algorithm-label">Algorithm</label>
+                <div id="algorithm-content">
+                    <select id="algorithm-select" onchange="changeAlgorithm()">
+                        <option value="Random">Random</option>
+                        <option value="Random">Random</option>                        
+                    </select>
+                </div>
+            </div>
+
+            <div id="shuffle-panel">
+                <label id="shuffle-label">Shuffle</label>
+                <input type="checkbox" id="shuffle-checkbox" onchange="shuffleChange()"></input>  
+            </div>
+
         </div>
     </body>
     <script>
         const init = () => {
-            const defaultTopColor ='blue';
             const topPickerParent = document.querySelector('#top-picker');
             const topPicker = new Picker(topPickerParent);
-            topPicker.setOptions({
-                popup: 'left',
-                color:defaultTopColor
-            })
-            topPickerParent.style.background = defaultTopColor;
-            topPicker.onChange = function(color) {
+            topPicker.onChange = (color) => {
                 topPickerParent.style.background = color.rgbaString;
                 draw();
             };
+            setPickerColor(topPickerParent, 'blue');
 
-            const defaultLeftColor ='yellow';
             const leftPickerParent = document.querySelector('#left-picker');
             const leftPicker = new Picker(leftPickerParent);
-            leftPicker.setOptions({
-                popup: 'left',
-                color:defaultLeftColor
-            })
-            leftPickerParent.style.background = defaultLeftColor;
-            leftPicker.onChange = function(color) {
+            leftPicker.onChange = (color) => {
                 leftPickerParent.style.background = color.rgbaString;
                 draw();
             };
+            setPickerColor(leftPickerParent, 'yellow');
 
-            const defaultrightColor ='orange';
             const rightPickerParent = document.querySelector('#right-picker');
             const rightPicker = new Picker(rightPickerParent);
-            rightPicker.setOptions({
-                popup: 'left',
-                color:defaultrightColor
-            })
-            rightPickerParent.style.background = defaultrightColor;
-            rightPicker.onChange = function(color) {
+            rightPicker.onChange = (color) =>  {
                 rightPickerParent.style.background = color.rgbaString;
                 draw();
             };
+            setPickerColor(rightPickerParent, 'orange');
         }
 
-        const changeCountSelect = () => {
+        const setPickerColor = (pickerParent, color) => {
+            const picker = new Picker(pickerParent);
+            picker.setOptions({
+                popup: 'left',
+                color
+            })
+            pickerParent.style.background = color;
+        }
+
+        const changeCount = () => {
             const select = document.querySelector("#count_select");
             const value = select.value;
             draw();
         }
 
+        const getRandomColor = () => `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`;
+        const randomColorChange = () => {
+            draw();
+        }
+
+        const changeAlgorithm = () => {
+            const select = document.querySelector("#algorithm_select");
+            const value = select.value;
+            draw();
+        }   
+
         const draw = () => {
+            const shouldUseRandomColors = document.querySelector("#random-color-checkbox").checked;
+            shouldUseRandomColors && setPickerColor(document.querySelector('#top-picker'), getRandomColor());
+            shouldUseRandomColors && setPickerColor(document.querySelector('#left-picker'), getRandomColor());
+            shouldUseRandomColors && setPickerColor(document.querySelector('#right-picker'), getRandomColor());
+
             const {width, height} = document.querySelector("canvas");
             const wCount = document.getElementById("count_select").value;
             const isoWidth = width  / wCount;
@@ -170,11 +224,9 @@
             const top = (height / 2);
             const left = -1 * (width / 2);
             const adjustedLeft = left;
-
             const {style: {background: topPickerColor}} = document.querySelector('#top-picker');
             const {style: {background: leftPickerColor}} = document.querySelector('#left-picker');
             const {style: {background: righPickerColor}} = document.querySelector('#right-picker');
-
 
             for(let i = 0; i < hCount + 1; i++){
                 for(let j = 0; j < wCount + 1; j++){
@@ -251,6 +303,14 @@
             ctx.setTransform(1,0,0,-1,window.innerWidth / 2,window.innerHeight / 2);
             draw();
         }
+
+        const shuffleChange = () => {
+            const shouldShuffle = document.querySelector("#shuffle-checkbox").checked;
+            shouldShuffle && setTimeout(() => {
+                draw();
+                shuffleChange();
+            }, 5000);
+        } 
 
         window.addEventListener('resize', resize);
         init();
