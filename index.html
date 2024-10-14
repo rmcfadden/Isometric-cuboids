@@ -23,7 +23,7 @@
                 top: 10px;
                 right: 10px;
                 width: 200px;
-                height: 300px;
+                height: 325px;
                 background-color: lightgrey;
                 opacity: .95;
                 border: 1px solid black;
@@ -66,59 +66,43 @@
             #top-colors-header {
                 font-weight: bold;
             }
-            #algorithm-label {
+            #algorithm-label, #block-count-label, #shuffle-label {
                 padding-top: .5em;
                 font-weight: bold;
             }
-            #algorithm-content {
-                height: 20px;
-                width:  100px;
-                padding-top: .5em;
+            #count-select, #algorithm-select {
+                margin-top: .5em;
             }
-            #left-colors-content, #right-colors-content, #algorithm-content, #use-random-content {
+            
+            #left-colors-content, #right-colors-content, #algorithm-content, #use-random-color-content, #block-count-content, #use-random-blocks-content, #algorithm-content, #shuffle-content, #use-random-algorithm-content {
                 padding-top: .25em;
                 display: flex;  
                 flex-direction: row;
                 justify-content: space-between;
             }
-            #algorithm-panel, #shuffle-panel {
-                padding-top: .5em;
-                font-weight: bold;                
+            #random-color-checkbox, #random-blocks-checkbox, #shuffle-checkbox, #random-algorithm-checkbox  {
+                height: 18px;
+                width: 18px;
             }
-            #random-color-checkbox {
-                height: 20px;
-                width: 20px;
-            }
-
         </style>
-
     <body>
         <canvas></canvas>
-        <div id="title">Isometric Cube Playground</div>
+        <div id="title">Isometric Cuboid Playground</div>
         <div id="options">
             <div id="options-header">
                 Options
             </div>
-            <div>
-                <label for="width">Block count:</label>
-                <select id="count_select" onchange="changeCount()">
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="15">15</option>
-                    <option value="20">20</option>
-                    <option value="25">25</option>
-                    <option value="30" selected>30</option>
-                    <option value="35">35</option>
-                    <option value="40">40</option>
-                    <option value="45">45</option>
-                    <option value="50">50</option>
-                    <option value="60">60</option>
-                    <option value="70">70</option>
-                    <option value="80">80</option>
-                    <option value="90">90</option>
-                    <option value="100">100</option>
+            <div id="block-count-content">
+                <label id="block-count-label" for="width">Block count</label>
+                <select id="count-select" onchange="draw()">
                 </select>
             </div>
+
+            <div id="use-random-blocks-content">
+                <div>Use random:</div>
+                <input type="checkbox" id="random-blocks-checkbox" onchange="draw()"></input>  
+            </div>
+
             <div id="top-colors-panel">
                 <div id="top-colors-header">Colors</div>
                 <div id="top-color-content">
@@ -133,37 +117,56 @@
                     <div>Right:</div>
                     <div id="right-picker"></div>
                 </div>
-                <div id="use-random-content">
+                <div id="use-random-color-content">
                     <div>Use random:</div>
-                    <input type="checkbox" id="random-color-checkbox" onchange="randomColorChange()"></input>  
+                    <input type="checkbox" id="random-color-checkbox" onchange="draw()"></input>  
                 </div>
             </div>
 
-            <div id="algorithm-panel">
+            <div id="algorithm-content">
                 <label id="algorithm-label">Algorithm</label>
-                <div id="algorithm-content">
-                    <select id="algorithm-select" onchange="changeAlgorithm()">
-                        <option value="Random">Random</option>
-                        <option value="Random">Random</option>                        
-                    </select>
-                </div>
+                <select id="algorithm-select" onchange="draw()">
+                </select>
             </div>
-
-            <div id="shuffle-panel">
+            <div id="use-random-algorithm-content">
+                <div>Use random:</div>
+                <input type="checkbox" id="random-algorithm-checkbox" onchange="draw()"></input>  
+            </div>
+            <div id="shuffle-content">
                 <label id="shuffle-label">Shuffle</label>
                 <input type="checkbox" id="shuffle-checkbox" onchange="shuffleChange()"></input>  
             </div>
-
         </div>
     </body>
     <script>
+        const blocks = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100];
+        const algorithms = ['Random', 'Sin'];
         const init = () => {
+            const countSelect = document.getElementById("count-select");
+            blocks.forEach(b => {
+                const option = document.createElement("option");
+                option.value = b;
+                option.text = b;
+                if(b === 35) option.selected = true;
+                countSelect.add(option);
+            });
+
+            const algorithmSelect = document.getElementById("algorithm-select");
+            algorithms.forEach(a => {
+                const option = document.createElement("option");
+                option.value = a;
+                option.text = a;
+                if(a === 'Random') option.selected = true;
+                algorithmSelect.add(option);
+            });
+
             const topPickerParent = document.querySelector('#top-picker');
             const topPicker = new Picker(topPickerParent);
             topPicker.onChange = (color) => {
                 topPickerParent.style.background = color.rgbaString;
-                draw();
+                draw();                
             };
+            topPicker.setOptions({popup: 'left'});
             setPickerColor(topPickerParent, 'blue');
 
             const leftPickerParent = document.querySelector('#left-picker');
@@ -172,6 +175,7 @@
                 leftPickerParent.style.background = color.rgbaString;
                 draw();
             };
+            leftPicker.setOptions({popup: 'left'});
             setPickerColor(leftPickerParent, 'yellow');
 
             const rightPickerParent = document.querySelector('#right-picker');
@@ -180,63 +184,62 @@
                 rightPickerParent.style.background = color.rgbaString;
                 draw();
             };
+            rightPicker.setOptions({popup: 'left'});
             setPickerColor(rightPickerParent, 'orange');
         }
 
         const setPickerColor = (pickerParent, color) => {
             const picker = new Picker(pickerParent);
-            picker.setOptions({
-                popup: 'left',
-                color
-            })
+            picker.setOptions({color});
             pickerParent.style.background = color;
         }
 
-        const changeCount = () => {
-            const select = document.querySelector("#count_select");
-            const value = select.value;
-            draw();
+        const getRandomColor = () => `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`;        
+        const heightAlgorithm = (algorithm, i, j, count) => {
+            const map = {
+                random: () => Math.random() * 75,
+                sin: () => Math.abs(200 * Math.sin((j / (count / 5) ) * Math.PI))
+            };
+            return map[algorithm]();
         }
-
-        const getRandomColor = () => `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`;
-        const randomColorChange = () => {
-            draw();
-        }
-
-        const changeAlgorithm = () => {
-            const select = document.querySelector("#algorithm_select");
-            const value = select.value;
-            draw();
-        }   
 
         const draw = () => {
             const shouldUseRandomColors = document.querySelector("#random-color-checkbox").checked;
             shouldUseRandomColors && setPickerColor(document.querySelector('#top-picker'), getRandomColor());
             shouldUseRandomColors && setPickerColor(document.querySelector('#left-picker'), getRandomColor());
             shouldUseRandomColors && setPickerColor(document.querySelector('#right-picker'), getRandomColor());
-
             const {width, height} = document.querySelector("canvas");
-            const wCount = document.getElementById("count_select").value;
+            const shouldUseRandomBlocks = document.querySelector("#random-blocks-checkbox").checked;
+            if(shouldUseRandomBlocks) { 
+                document.getElementById("count-select").value = blocks[Math.floor(Math.random() * blocks.length)];
+            }   
+            document.getElementById("count-select").disabled = shouldUseRandomBlocks;  
+
+            const shouldUseRandomAlgorithms = document.querySelector("#random-algorithm-checkbox").checked;
+            if(shouldUseRandomAlgorithms) { 
+                document.getElementById("algorithm-select").value = algorithms[Math.floor(Math.random() * algorithms.length)];
+            }   
+            document.getElementById("algorithm-select").disabled = shouldUseRandomAlgorithms;  
+            const wCount = document.getElementById("count-select").value;
             const isoWidth = width  / wCount;
             const isoHeight = (isoWidth * 2) / Math.sqrt(3);
             const hCount = height / (isoHeight -  (isoHeight * 1/4));
-
             const top = (height / 2);
             const left = -1 * (width / 2);
             const adjustedLeft = left;
+            const algorithm =  document.getElementById("algorithm-select").value;
             const {style: {background: topPickerColor}} = document.querySelector('#top-picker');
             const {style: {background: leftPickerColor}} = document.querySelector('#left-picker');
             const {style: {background: righPickerColor}} = document.querySelector('#right-picker');
-
             for(let i = 0; i < hCount + 1; i++){
                 for(let j = 0; j < wCount + 1; j++){
-                    const randHeight = Math.random() * 75;
+                    const cubeHeight = heightAlgorithm(algorithm.toLowerCase(),i,j, wCount);
                     drawIsometricCube({
                         x:adjustedLeft + (j * isoWidth ) - ( i % 2 == 1 ? isoWidth * 1/2 : 0),
                         y:top - (i * isoHeight - (isoHeight * (1/4 * (i +1 )))), 
                         w:isoWidth,                        
                         h:isoHeight,
-                        hV:randHeight,
+                        hV:cubeHeight,
                         topColor: topPickerColor,
                         leftColor: leftPickerColor,
                         rightColor: righPickerColor
