@@ -22,8 +22,8 @@
                 position: absolute;
                 top: 10px;
                 right: 10px;
-                width: 200px;
-                height: 325px;
+                width: 230px;
+                height: 440px;
                 background-color: lightgrey;
                 opacity: .95;
                 border: 1px solid black;
@@ -60,13 +60,13 @@
                 flex-direction: row;
                 justify-content: space-between;
             }
-            #top-colors-panel {
+            #top-colors-panel, #height-panel {
                 margin-top: 1em;
             }
             #top-colors-header {
                 font-weight: bold;
             }
-            #algorithm-label, #block-count-label, #shuffle-label {
+            #algorithm-label, #block-count-label, #shuffle-label, #height-label {
                 padding-top: .5em;
                 font-weight: bold;
             }
@@ -74,13 +74,13 @@
                 margin-top: .5em;
             }
             
-            #left-colors-content, #right-colors-content, #algorithm-content, #use-random-color-content, #block-count-content, #use-random-blocks-content, #algorithm-content, #shuffle-content, #use-random-algorithm-content {
+            #left-colors-content, #right-colors-content, #algorithm-content, #use-random-color-content, #block-count-content, #use-random-blocks-content, #shuffle-content, #use-random-algorithm-content, #height-min-content,#height-max-content, #use-random-height-content {
                 padding-top: .25em;
                 display: flex;  
                 flex-direction: row;
                 justify-content: space-between;
             }
-            #random-color-checkbox, #random-blocks-checkbox, #shuffle-checkbox, #random-algorithm-checkbox  {
+            #random-color-checkbox, #random-blocks-checkbox, #shuffle-checkbox, #random-algorithm-checkbox, #random-height-checkbox  {
                 height: 18px;
                 width: 18px;
             }
@@ -132,6 +132,23 @@
                 <div>Use random:</div>
                 <input type="checkbox" id="random-algorithm-checkbox" onchange="draw()"></input>  
             </div>
+
+            <div id="height-panel">
+                <label id="height-label">Height</label>
+                <div id="height-min-content">
+                    <div>Min:</div>
+                    <select id="min-height-select" onchange="draw()"></select>
+                </div>
+                <div id="height-max-content">
+                    <div>Max:</div>
+                    <select id="max-height-select" onchange="draw()"></select>
+                </div>
+            </div>
+            <div id="use-random-height-content">
+                <div>Use random:</div>
+                <input type="checkbox" id="random-height-checkbox" onchange="draw()"></input>  
+            </div>
+
             <div id="shuffle-content">
                 <label id="shuffle-label">Shuffle</label>
                 <input type="checkbox" id="shuffle-checkbox" onchange="shuffleChange()"></input>  
@@ -158,6 +175,20 @@
                 option.text = a;
                 if(a === 'Random') option.selected = true;
                 algorithmSelect.add(option);
+            });
+
+            [...Array(100).keys()].forEach(i => {
+                const minOption = document.createElement("option");
+                minOption.value = i;
+                minOption.text = i;
+                if(i === 10) minOption.selected = true;
+                document.getElementById("min-height-select").add(minOption);
+
+                const maxOption = document.createElement("option");
+                maxOption.value = i;
+                maxOption.text = i;
+                if(i === 50) maxOption.selected = true; 
+                document.getElementById("max-height-select").add(maxOption);                
             });
 
             const topPickerParent = document.querySelector('#top-picker');
@@ -195,19 +226,22 @@
         }
 
         const getRandomColor = () => `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`;        
-        const heightAlgorithm = (algorithm, i, j, count) => {
+        const heightAlgorithm = (algorithm, i, j, count, minHeight, maxHeight) => {
+            const minAdjusted = Math.min(minHeight, maxHeight);
+            const maxAdjusted = Math.max(minHeight, maxHeight);
+
             const map = {
-                random: () => Math.random() * 75,
-                sin: () => Math.abs(200 * Math.sin((j / (count / 5) ) * Math.PI))
+                random: () => (Math.random() * (maxAdjusted - minAdjusted) + minAdjusted),
+                sin: () => Math.abs(maxHeight * Math.sin((j / (count / 5) ) * Math.PI))
             };
             return map[algorithm]();
         }
 
         const draw = () => {
-            const shouldUseRandomColors = document.querySelector("#random-color-checkbox").checked;
-            shouldUseRandomColors && setPickerColor(document.querySelector('#top-picker'), getRandomColor());
-            shouldUseRandomColors && setPickerColor(document.querySelector('#left-picker'), getRandomColor());
-            shouldUseRandomColors && setPickerColor(document.querySelector('#right-picker'), getRandomColor());
+            const shouldUseRandomColors = document.getElementById("random-color-checkbox").checked;
+            shouldUseRandomColors && setPickerColor(document.getElementById('top-picker'), getRandomColor());
+            shouldUseRandomColors && setPickerColor(document.getElementById('left-picker'), getRandomColor());
+            shouldUseRandomColors && setPickerColor(document.getElementById('right-picker'), getRandomColor());
             const {width, height} = document.querySelector("canvas");
             const shouldUseRandomBlocks = document.querySelector("#random-blocks-checkbox").checked;
             if(shouldUseRandomBlocks) { 
@@ -220,6 +254,14 @@
                 document.getElementById("algorithm-select").value = algorithms[Math.floor(Math.random() * algorithms.length)];
             }   
             document.getElementById("algorithm-select").disabled = shouldUseRandomAlgorithms;  
+            const shouldUseRandomHeight = document.querySelector("#random-height-checkbox").checked;
+        
+
+            const minHeight = shouldUseRandomHeight ? Math.floor(Math.random() * 100) : parseInt(document.getElementById("min-height-select").value);
+            const maxHeight = shouldUseRandomHeight ? Math.floor(Math.random() * ((100 - minHeight)) + minHeight) : parseInt(document.getElementById("max-height-select").value);
+            if(shouldUseRandomHeight) document.getElementById("min-height-select").value = minHeight;
+            if(shouldUseRandomHeight) document.getElementById("max-height-select").value = maxHeight;
+
             const wCount = document.getElementById("count-select").value;
             const isoWidth = width  / wCount;
             const isoHeight = (isoWidth * 2) / Math.sqrt(3);
@@ -233,7 +275,7 @@
             const {style: {background: righPickerColor}} = document.querySelector('#right-picker');
             for(let i = 0; i < hCount + 1; i++){
                 for(let j = 0; j < wCount + 1; j++){
-                    const cubeHeight = heightAlgorithm(algorithm.toLowerCase(),i,j, wCount);
+                    const cubeHeight = heightAlgorithm(algorithm.toLowerCase(),i,j, wCount,minHeight,maxHeight);
                     drawIsometricCube({
                         x:adjustedLeft + (j * isoWidth ) - ( i % 2 == 1 ? isoWidth * 1/2 : 0),
                         y:top - (i * isoHeight - (isoHeight * (1/4 * (i +1 )))), 
@@ -260,10 +302,10 @@
             // right
             ctx.beginPath(); 
             ctx.moveTo(x + halfWidth, y - h); 
-            ctx.lineTo(x, y - (h *  3/4)); // 1
-            ctx.lineTo(x, adjustedCornerTop); // 2 variable
-            ctx.lineTo(x + halfWidth, (y - (h / 2)) + hV);  // 3
-            ctx.lineTo(x + halfWidth, y - h); // 4 variable
+            ctx.lineTo(x, y - (h *  3/4));
+            ctx.lineTo(x, adjustedCornerTop);
+            ctx.lineTo(x + halfWidth, (y - (h / 2)) + hV);
+            ctx.lineTo(x + halfWidth, y - h);
             ctx.strokeStyle = "black"
             ctx.stroke();
             ctx.fillStyle = rightColor;
@@ -272,10 +314,10 @@
             // left
             ctx.beginPath(); 
             ctx.moveTo(x + halfWidth, y - h); 
-            ctx.lineTo(x + w, y - (h *  3/4)); // 1
-            ctx.lineTo(x + w, adjustedCornerTop); // 2 variable
-            ctx.lineTo(x + halfWidth, (y - (h / 2)) + hV);  // 3
-            ctx.lineTo(x + halfWidth, y - h); // 4 variable
+            ctx.lineTo(x + w, y - (h *  3/4));
+            ctx.lineTo(x + w, adjustedCornerTop);
+            ctx.lineTo(x + halfWidth, (y - (h / 2)) + hV);
+            ctx.lineTo(x + halfWidth, y - h);
             ctx.strokeStyle = "black"
             ctx.stroke();
             ctx.fillStyle = leftColor;
