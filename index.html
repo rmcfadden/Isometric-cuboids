@@ -87,7 +87,7 @@
         </style>
     <body>
         <canvas></canvas>
-        <div id="title">Isometric Cuboid Playground</div>
+        <div id="title">Isometric Cuboids</div>
         <div id="options">
             <div id="options-header">
                 Options
@@ -157,7 +157,7 @@
     </body>
     <script>
         const blocks = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100];
-        const algorithms = ['Random', 'Sin'];
+        const algorithms = ['Random', 'Sin', 'Right Incline'];
         const init = () => {
             const countSelect = document.getElementById("count-select");
             blocks.forEach(b => {
@@ -226,13 +226,17 @@
         }
 
         const getRandomColor = () => `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`;        
-        const heightAlgorithm = (algorithm, i, j, count, minHeight, maxHeight) => {
+        const heightAlgorithm = (algorithm, i, j, count, minHeight, maxHeight,isoWidth, isoHeight) => {
             const minAdjusted = Math.min(minHeight, maxHeight);
             const maxAdjusted = Math.max(minHeight, maxHeight);
-
             const map = {
                 random: () => (Math.random() * (maxAdjusted - minAdjusted) + minAdjusted),
-                sin: () => Math.abs(maxHeight * Math.sin((j / (count / 5) ) * Math.PI))
+                'right incline': () => {
+                    const height = (maxAdjusted - minAdjusted) + isoHeight;
+                    const increment = height / count;
+                    return (minAdjusted + (j * increment));
+                },
+                sin: () => maxHeight + (maxHeight * Math.sin((j / (count / 5) ) * Math.PI))
             };
             return map[algorithm]();
         }
@@ -256,16 +260,15 @@
             document.getElementById("algorithm-select").disabled = shouldUseRandomAlgorithms;  
             const shouldUseRandomHeight = document.querySelector("#random-height-checkbox").checked;
         
-
             const minHeight = shouldUseRandomHeight ? Math.floor(Math.random() * 100) : parseInt(document.getElementById("min-height-select").value);
             const maxHeight = shouldUseRandomHeight ? Math.floor(Math.random() * ((100 - minHeight)) + minHeight) : parseInt(document.getElementById("max-height-select").value);
             if(shouldUseRandomHeight) document.getElementById("min-height-select").value = minHeight;
             if(shouldUseRandomHeight) document.getElementById("max-height-select").value = maxHeight;
 
-            const wCount = document.getElementById("count-select").value;
+            const wCount = parseInt(document.getElementById("count-select").value);
             const isoWidth = width  / wCount;
             const isoHeight = (isoWidth * 2) / Math.sqrt(3);
-            const hCount = height / (isoHeight -  (isoHeight * 1/4));
+            const hCount = Math.ceil(height / (isoHeight -  (isoHeight * 1/4)));
             const top = (height / 2);
             const left = -1 * (width / 2);
             const adjustedLeft = left;
@@ -275,7 +278,7 @@
             const {style: {background: righPickerColor}} = document.querySelector('#right-picker');
             for(let i = 0; i < hCount + 1; i++){
                 for(let j = 0; j < wCount + 1; j++){
-                    const cubeHeight = heightAlgorithm(algorithm.toLowerCase(),i,j, wCount,minHeight,maxHeight);
+                    const cubeHeight = heightAlgorithm(algorithm.toLowerCase(),i,j, wCount,minHeight,maxHeight,isoWidth, isoHeight);
                     drawIsometricCube({
                         x:adjustedLeft + (j * isoWidth ) - ( i % 2 == 1 ? isoWidth * 1/2 : 0),
                         y:top - (i * isoHeight - (isoHeight * (1/4 * (i +1 )))), 
