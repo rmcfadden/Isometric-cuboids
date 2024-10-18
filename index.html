@@ -100,7 +100,7 @@
 
             <div id="use-random-blocks-content">
                 <div>Use random:</div>
-                <input type="checkbox" id="random-blocks-checkbox" onchange="draw()"></input>  
+                <input type="checkbox" id="random-blocks-checkbox" checked onchange="draw()"></input>  
             </div>
 
             <div id="top-colors-panel">
@@ -119,7 +119,7 @@
                 </div>
                 <div id="use-random-color-content">
                     <div>Use random:</div>
-                    <input type="checkbox" id="random-color-checkbox" onchange="draw()"></input>  
+                    <input type="checkbox" id="random-color-checkbox" checked onchange="draw()"></input>  
                 </div>
             </div>
 
@@ -130,7 +130,7 @@
             </div>
             <div id="use-random-algorithm-content">
                 <div>Use random:</div>
-                <input type="checkbox" id="random-algorithm-checkbox" onchange="draw()"></input>  
+                <input type="checkbox" id="random-algorithm-checkbox" checked onchange="draw()"></input>  
             </div>
 
             <div id="height-panel">
@@ -146,12 +146,12 @@
             </div>
             <div id="use-random-height-content">
                 <div>Use random:</div>
-                <input type="checkbox" id="random-height-checkbox" onchange="draw()"></input>  
+                <input type="checkbox" id="random-height-checkbox" checked onchange="draw()"></input>  
             </div>
 
             <div id="shuffle-content">
                 <label id="shuffle-label">Shuffle</label>
-                <input type="checkbox" id="shuffle-checkbox" onchange="shuffleChange()"></input>  
+                <input type="checkbox" id="shuffle-checkbox" checked onchange="shuffleChange()"></input>  
             </div>
         </div>
     </body>
@@ -363,7 +363,9 @@
         window.addEventListener('resize', resize);
         init();
         resize();
+        shuffleChange();
         draw();
+
 
     </script>
 
